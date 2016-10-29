@@ -4,8 +4,30 @@ import json
 
 import requests
 from flask import Flask, request
+from chatterbot import ChatBot
+from chatterbot.trainers import ListTrainer
 
 app = Flask(__name__)
+
+realli_bot = ChatBot(
+  "Realli Bot",
+)
+
+with open("./data/conversations.json", "rb") as json_data:
+  conversations = json.load(json_data)['conversations']
+
+with open("./data/property.json", "rb") as json_data:
+  property_data = json.load(json_data)['property']
+
+realli_bot.set_trainer(ListTrainer)
+
+realli_bot.train(
+  conversations[0]
+)
+
+realli_bot.train(
+  property_data[0]
+)
 
 
 @app.route('/', methods=['GET'])
@@ -17,6 +39,17 @@ def verify():
 
     return "Hello world", 200
 
+@app.route('/get/<string:query>', methods=['GET'])
+def test(query):
+    resp = str(realli_bot.get_response(query))
+    return resp, 200
+
+@app.route('/send', methods=['GET'])
+def send():
+    msg = request.args.get("msg")
+    print(msg)
+    resp = str(english_bot.get_response(msg))
+    return resp, 200
 
 @app.route('/', methods=['POST'])
 def webhook():
